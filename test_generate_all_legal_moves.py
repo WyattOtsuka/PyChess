@@ -30,14 +30,18 @@ for square in squares_to_moves:
 
 print(num_moves)
 
-def calculate_moves(squares_to_moves, depth_to_go, color='w'):
+def calculate_moves(squares_to_moves, depth_to_go, color='b'):
     num_moves = 0
     for square in squares_to_moves:
         # Make the move
         for move in squares_to_moves[square]:
+            en_passant_square = None
+            if board[int(square[0])][int(square[2])][2] == 'p' and abs(int(square[0]) - move[0]) == 2:
+                en_passant_square = [(int(square[0]) + move[0]) // 2, move[1]]
+
             board[move[0]][move[1]] = board[int(square[0])][int(square[2])]
             board[int(square[0])][int(square[2])] = ''
-            squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board, color)
+            squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board, color, en_passant_square=en_passant_square)
 
             if depth_to_go == 0:
                 for square_2 in squares_to_moves_2:
@@ -50,5 +54,5 @@ def calculate_moves(squares_to_moves, depth_to_go, color='w'):
 
     return num_moves
 
-print(calculate_moves(squares_to_moves, 0))
-print(calculate_moves(squares_to_moves, 1))
+# print(calculate_moves(squares_to_moves, 0))
+print(calculate_moves(squares_to_moves, 1)) 
