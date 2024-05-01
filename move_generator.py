@@ -1,11 +1,35 @@
-def generate_moves(board, row, col, piece=None, flip=False, en_passant_sqaure=None):
+import move_checker
+
+def generate_all_legal_moves_for_color(board, color, flip=False, en_passant_square=None):
+    moves = {}
+    is_white_turn = color == 'w'
+    for row_idx, row in enumerate(board):
+        for col_idx, square in enumerate(row):
+            if square != '' and square[0] == color:
+                moves[f"{row_idx},{col_idx}"] = generate_all_legal_moves_for_piece(board, row_idx, col_idx, is_white_turn, square, flip, en_passant_square)
+    return moves
+
+
+def generate_all_legal_moves_for_piece(board, row, col, is_white_turn, piece=None, flip=False, en_passant_square=None):
+    if piece == None:
+        piece = board[row][col]
+    moves = generate_moves(board, row, col, piece, flip, en_passant_square)
+    legal_moves = []
+    for move in moves:
+        if move_checker.is_valid_move(board, [[row, col], move], piece, is_white_turn, flip, en_passant_square):
+            legal_moves.append(move)
+    
+    return legal_moves
+
+
+def generate_moves(board, row, col, piece=None, flip=False, en_passant_square=None):
     if piece == None:
         piece = board[row][col]
     color = piece[0]
     piece_type = piece[2]
 
     if piece_type == 'p':
-        return generate_pawn_moves(board, row, col, color, flip, en_passant_sqaure)
+        return generate_pawn_moves(board, row, col, color, flip, en_passant_square)
     elif piece_type == 'r':
         return generate_rook_moves(board, row, col)
     elif piece_type == 'n':

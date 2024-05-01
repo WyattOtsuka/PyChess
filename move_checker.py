@@ -18,6 +18,10 @@ def is_valid_move(board, move, piece, is_white_turn, flip, en_passant_square):
         pass
     else:
         return False
+    
+    # Check if the piece is pinned
+    if does_move_cause_check(board, start, end, is_white_turn):
+        return False
 
     # Check if the move is a valid move for the piece
     if piece[2] == 'p':
@@ -192,6 +196,7 @@ def is_capture(board, row, col, piece, start_row, start_col, en_passant_square):
 '''
 
 def can_castle(board, color, rook_a_moved, rook_h_moved):
+    #TODO: convert to use find_all_attacking
     castling = [None, None]
     castling[0] = not rook_a_moved
     castling[1] = not rook_h_moved
@@ -353,25 +358,16 @@ def check_pawn_king_attacks(board, enemy_color, start_rank, increment, direction
         
     return False
 
-def find_all_causing_check(board, is_white_turn):
-    # TODO: convert to use first piece found
-    checking_pieces_positions = []
+'''
+** ATTACKING **
+'''
+
+def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
+    attacking_pieces_positions = []
 
     row = None
     col = None
-    king = 'w_k' if is_white_turn else 'b_k'
     enemy_color = 'b' if is_white_turn else 'w'
-
-    u_found = False
-    ur_found = False
-    r_found = False
-    dr_found = False
-    d_found = False
-    dl_found = False
-    l_found = False
-    ul_found = False
-
-    row, col = find_king(board, king)
     
     # Queen Rook Bishop checks
     for i in [-1, 0, 1]:
@@ -379,26 +375,26 @@ def find_all_causing_check(board, is_white_turn):
             if i == 0 and j == 0:
                 continue
 
-            row, col = first_piece_found(board, [row, col], [i, j])
+            row, col = first_piece_found(board, [attacked_row, attacked_col], [i, j])
             if row == None:
                 continue
 
             if i != 0 and j != 0: # Diagonal, check for bishops and queens
                 if board[row][col] == enemy_color + '_b' or board[row][col] == enemy_color + 'q':
-                    checking_pieces_positions.append([row, col])
+                    attacking_pieces_positions.append([row, col])
             else:
                 if board[row][col] == enemy_color + '_r' or board[row][col] == enemy_color + '_q':
-                    checking_pieces_positions.append([row, col])
+                    attacking_pieces_positions.append([row, col])
 
 
-    # Knight Checks
+    # Knight attacks
     knight_moves = [[-1, -2], [-1, 2], [1, -2], [1, 2], [-2, -1], [-2, 1], [2, -1], [2, 1]]
     for move in knight_moves:
         if row + move[0] >=0 and row + move[0] <=7 and col + move[1] >=0 and col + move[1] <=7:
             if board[row + move[0]][col + move[1]] == enemy_color + '_n':
-                checking_pieces_positions.append([row + move[0], col + move[1]])
+                attacking_pieces_positions.append([row + move[0], col + move[1]])
             
-    # Pawn checks
+    # Pawn attacks
     pawns = []
     if is_white_turn:
         if row - 1 >= 0:
@@ -414,9 +410,9 @@ def find_all_causing_check(board, is_white_turn):
                 pawns.append([row + 1, col - 1])
     for pawn in pawns:
         if board[pawn[0]][pawn[1]] == enemy_color + '_p':
-            checking_pieces_positions.append([pawn[0]][pawn[1]])
+            attacking_pieces_positions.append([pawn[0]][pawn[1]])
     
-    return False
+    return attacking_pieces_positions
 
 def first_piece_found(board, start, direction):
     for i in range(8):
@@ -428,6 +424,9 @@ def first_piece_found(board, start, direction):
         else:
             return None, None
 
+
+
+
 def does_move_cause_check(board, start, end, is_white_turn):
     board_copy = copy.deepcopy(board)
 
@@ -437,7 +436,9 @@ def does_move_cause_check(board, start, end, is_white_turn):
     return is_in_check(board_copy, is_white_turn)
 
 def is_in_check(board, is_white_turn):
-    checking_pieces = find_all_causing_check(board, is_white_turn)
+    king = 'w_k' if is_white_turn else 'b_k'
+    row, col = find_king(board, king)
+    checking_pieces = find_all_attacking(board, row, col, is_white_turn)
     return len(checking_pieces) > 1
 
 def is_mate(board, is_white_turn):
@@ -451,9 +452,27 @@ def is_mate(board, is_white_turn):
                 continue
 
             if not does_move_cause_check(board, [row, col], [row + x_del, col + y_del]):
-                return True
+                return False
 
-    # Check if the attacker can be taken and the king isn't in check afterwards
+    # First, find all attackers. If there's only 1, the attack can be stopped with a block or a capture
+    attacking_pieces = find_all_attacking(board, row, col, is_white_turn)
+    if len(attacking_pieces) == 1:
+        # Check if the piece can be captured
+        can_capture_checker = find_all_attacking(board, attacking_pieces[0][0], attacking_pieces[0][1], not is_white_turn)
+        for position in can_capture_checker:
+            if does_move_cause_check(board, position, attacking_pieces[0], not is_white_turn):
+                return False
+            
+        # Check if the piece can be blocked
+        # If the piece is a pawn or knight, it cannot be blocked and is thus checkmate
+        if attacking_pieces[0][2] == 'n' or attacking_pieces[0][2] == 'p':
+            return True
+        
+
+
+    else:
+        # Since a king move is invalid, a double check is checkmate
+        return True
 
     # Check if the attack can be blocked (rook bishop queen)
         
