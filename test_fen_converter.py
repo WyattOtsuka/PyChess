@@ -1,7 +1,7 @@
 import unittest 
 from fen_converter import board_to_fen
 
-class TestKnightMoves(unittest.TestCase):
+class TestFenConverter(unittest.TestCase):
     def test_starting_position(self):
         board = [
             ['b_r', 'b_n', 'b_b', 'b_q', 'b_k', 'b_b', 'b_n', 'b_r'],
