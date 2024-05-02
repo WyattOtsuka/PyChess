@@ -65,4 +65,8 @@ print(fen_converter.board_to_fen(board))
 
 # print(calculate_moves(squares_to_moves, 1, color='w'))
 
-print(calculate_moves(squares_to_moves, 2, color='w', print_nodes=True))
+#print(calculate_moves(squares_to_moves, 2, color='w', print_nodes=True))
+
+board_2 = fen_converter.fen_to_board("rnbqkbnr/pppppppp/8/8/8/7N/PPPPPPPP/RNBQKB1R")
+squares_to_moves_board_2 = move_generator.generate_all_legal_moves_for_color(board_2, 'w')
+print(calculate_moves(squares_to_moves_board_2, 1, color='b', print_nodes=True))

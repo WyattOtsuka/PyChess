@@ -23,3 +23,20 @@ def board_to_fen(board):
             fen_string += '/'
     
     return fen_string
+
+def fen_to_board(fen_string):
+    rows = fen_string.split("/")
+    board = []
+    for row in rows:
+        row_to_add = []
+        for char in row:
+            if char.isdigit():
+                for _ in range(int(char)):
+                    row_to_add.append('')
+            elif ord(char) >= 96:
+                row_to_add.append(f'b_{char}')
+            else:
+                row_to_add.append(f'w_{char.lower()}')
+        board.append(row_to_add)
+    
+    return board
