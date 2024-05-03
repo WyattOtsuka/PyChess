@@ -68,7 +68,7 @@ def generate_pawn_moves(board, row, col, color, flip, en_passant_sqaure):
     if color == 'w' and not flip or (color != 'w' and flip):
         if row > 0:
             moves.append([row-1, col])
-            if row == 6 and board[row-2][col] == '':
+            if row == 6 and board[row-2][col] == '' and board[row-1][col] == '':
                 moves.append([row-2, col])
         if col > 0 and board[row-1][col-1] != '' and board[row-1][col-1][0] == 'b':
             moves.append([row-1, col-1])
@@ -77,7 +77,7 @@ def generate_pawn_moves(board, row, col, color, flip, en_passant_sqaure):
     else:
         if row < 7:
             moves.append([row+1, col])
-            if row == 1 and board[row+2][col] == '':
+            if row == 1 and board[row+2][col] == '' and board[row+1][col] == '':
                 moves.append([row+2, col])
         if col > 0 and board[row+1][col-1] != '' and board[row+1][col-1][0] == 'w':
             moves.append([row+1, col-1])

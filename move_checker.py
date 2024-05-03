@@ -410,7 +410,7 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
                 pawns.append([row + 1, col - 1])
     for pawn in pawns:
         if board[pawn[0]][pawn[1]] == enemy_color + '_p':
-            attacking_pieces_positions.append([pawn[0]][pawn[1]])
+            attacking_pieces_positions.append([pawn[0], pawn[1]])
     
     return attacking_pieces_positions
 
