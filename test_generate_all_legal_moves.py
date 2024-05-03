@@ -1,5 +1,8 @@
 import move_generator
 import fen_converter
+import time
+
+start_time = time.time()
 
 board_1 = [
     ['b_r', 'b_n', 'b_b', 'b_q', '', 'b_k', '', 'b_r'],
@@ -23,17 +26,18 @@ starting_board = [
     ['w_r', 'w_n', 'w_b', 'w_q', 'w_k', 'w_b', 'w_n', 'w_r']
 ]
 
-squares_to_moves = move_generator.generate_all_legal_moves_for_color(starting_board, 'w')
-
-num_moves = 0
-
-
 def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes = False, print_fen = False):
     num_moves = 0
     if depth_to_go == 0:
         for square in squares_to_moves:
             num_moves += len(squares_to_moves[square])
-
+            
+            if print_nodes:
+                for move in squares_to_moves[square]:
+                    if print_fen:
+                        print(f"{chr(97+int(square[2]))}{8-int(square[0])}{chr(97+int(move[1]))}{8-move[0]}: 1  --- {fen_converter.board_to_fen(board)} {'w' if color == 'b' else 'b'}")
+                    else: 
+                        print(f"{chr(97+int(square[2]))}{8-int(square[0])}{chr(97+int(move[1]))}{8-move[0]}: 1")
         return num_moves
 
 
@@ -66,7 +70,12 @@ def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes
 
 # print(calculate_moves(squares_to_moves, 3, color='w', print_nodes=True))
 
-board_2 = fen_converter.fen_to_board("rnbqkbnr/pppppppp/8/8/8/7N/PPPPPPPP/RNBQKB1R")
-squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board_2, 'b')
+board_2, is_white_turn = fen_converter.fen_to_board("rnbqkbnr/p1ppp1pp/1p3p2/6N1/8/8/PPPPPPPP/RNBQKB1R w")
 
-print(calculate_moves(board_2, squares_to_moves_2, 2, color='b', print_nodes=True, print_fen=False))
+color = 'w' if is_white_turn else 'b'
+squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board_2, color)
+
+print(calculate_moves(board_2, squares_to_moves_2, 3, color=color, print_nodes=True, print_fen=False))
+
+
+print(f"Finished in {time.time()-start_time} s")
