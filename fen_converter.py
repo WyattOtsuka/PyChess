@@ -25,7 +25,13 @@ def board_to_fen(board):
     return fen_string
 
 def fen_to_board(fen_string):
-    rows = fen_string.split("/")
+    fen_parts = fen_string.split(" ")
+
+    is_white_turn = None
+    if len(fen_parts) > 1:
+        is_white_turn = fen_parts[1] == 'w'
+
+    rows = fen_parts[0].split("/")
     board = []
     for row in rows:
         row_to_add = []
@@ -39,4 +45,4 @@ def fen_to_board(fen_string):
                 row_to_add.append(f'w_{char.lower()}')
         board.append(row_to_add)
     
-    return board
+    return board, is_white_turn
