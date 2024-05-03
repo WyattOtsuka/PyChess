@@ -390,24 +390,24 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
     # Knight attacks
     knight_moves = [[-1, -2], [-1, 2], [1, -2], [1, 2], [-2, -1], [-2, 1], [2, -1], [2, 1]]
     for move in knight_moves:
-        if row + move[0] >=0 and row + move[0] <=7 and col + move[1] >=0 and col + move[1] <=7:
-            if board[row + move[0]][col + move[1]] == enemy_color + '_n':
-                attacking_pieces_positions.append([row + move[0], col + move[1]])
+        if attacked_row + move[0] >=0 and attacked_row + move[0] <=7 and attacked_col + move[1] >=0 and attacked_col + move[1] <=7:
+            if board[attacked_row + move[0]][attacked_col + move[1]] == enemy_color + '_n':
+                attacking_pieces_positions.append([attacked_row + move[0], attacked_col + move[1]])
             
     # Pawn attacks
     pawns = []
     if is_white_turn:
-        if row - 1 >= 0:
-            if col + 1 <=7:
-                pawns.append([row - 1, col + 1])
-            if col - 1 >= 0:
-                pawns.append([row - 1, col - 1])
+        if attacked_row - 1 >= 0:
+            if attacked_col + 1 <=7:
+                pawns.append([attacked_row - 1, attacked_col + 1])
+            if attacked_col - 1 >= 0:
+                pawns.append([attacked_row - 1, attacked_col - 1])
     else:
-        if row + 1 >= 0:
-            if col + 1 <=7:
-                pawns.append([row + 1, col + 1])
-            if col - 1 >= 0:
-                pawns.append([row + 1, col - 1])
+        if attacked_row + 1 >= 0:
+            if attacked_col + 1 <=7:
+                pawns.append([attacked_row + 1, attacked_col + 1])
+            if attacked_col - 1 >= 0:
+                pawns.append([attacked_row + 1, attacked_col - 1])
     for pawn in pawns:
         if board[pawn[0]][pawn[1]] == enemy_color + '_p':
             attacking_pieces_positions.append([pawn[0], pawn[1]])
@@ -416,8 +416,8 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
 
 def first_piece_found(board, start, direction):
     for i in range(8):
-        new_row = start[0] + direction[0] * i
-        new_col = start[1] + direction[1] * i
+        new_row = start[0] + direction[0] * (i + 1)
+        new_col = start[1] + direction[1] * (i + 1)
         if new_row <= 7 and new_row >= 0 and new_col <= 7 and new_col >= 0:
             if board[new_row][new_col] != '':
                 return new_row, new_col
@@ -443,7 +443,7 @@ def is_in_check(board, is_white_turn):
     king = 'w_k' if is_white_turn else 'b_k'
     row, col = find_king(board, king)
     checking_pieces = find_all_attacking(board, row, col, is_white_turn)
-    return len(checking_pieces) > 1
+    return len(checking_pieces) >= 1
 
 def is_mate(board, is_white_turn):
     king = 'w_k' if is_white_turn else 'b_k'
