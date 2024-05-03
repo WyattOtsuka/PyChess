@@ -428,12 +428,16 @@ def first_piece_found(board, start, direction):
 
 
 def does_move_cause_check(board, start, end, is_white_turn):
-    board_copy = copy.deepcopy(board)
+    prev_piece = board[end[0]][end[1]]
 
-    board_copy[end[0]][end[1]] = board_copy[start[0]][start[1]]
-    board_copy[start[0]][start[1]] = ''
+    board[end[0]][end[1]] = board[start[0]][start[1]]
+    board[start[0]][start[1]] = ''
     
-    return is_in_check(board_copy, is_white_turn)
+    ret = is_in_check(board, is_white_turn)
+
+    board[start[0]][start[1]] = board[end[0]][end[1]]
+    board[end[0]][end[1]] = prev_piece
+    return ret
 
 def is_in_check(board, is_white_turn):
     king = 'w_k' if is_white_turn else 'b_k'
