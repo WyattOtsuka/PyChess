@@ -380,7 +380,7 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
                 continue
 
             if i != 0 and j != 0: # Diagonal, check for bishops and queens
-                if board[row][col] == enemy_color + '_b' or board[row][col] == enemy_color + 'q':
+                if board[row][col] == enemy_color + '_b' or board[row][col] == enemy_color + '_q':
                     attacking_pieces_positions.append([row, col])
             else:
                 if board[row][col] == enemy_color + '_r' or board[row][col] == enemy_color + '_q':
