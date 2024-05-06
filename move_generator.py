@@ -1,19 +1,19 @@
 import move_checker
 
-def generate_all_legal_moves_for_color(board, color, flip=False, en_passant_square=None):
+def generate_all_legal_moves_for_color(board, color, flip=False, en_passant_square=None, castling=None):
     moves = {}
     is_white_turn = color == 'w'
     for row_idx, row in enumerate(board):
         for col_idx, square in enumerate(row):
             if square != '' and square[0] == color:
-                moves[f"{row_idx},{col_idx}"] = generate_all_legal_moves_for_piece(board, row_idx, col_idx, is_white_turn, square, flip, en_passant_square)
+                moves[f"{row_idx},{col_idx}"] = generate_all_legal_moves_for_piece(board, row_idx, col_idx, is_white_turn, square, flip, en_passant_square, castling)
     return moves
 
 
-def generate_all_legal_moves_for_piece(board, row, col, is_white_turn, piece=None, flip=False, en_passant_square=None):
+def generate_all_legal_moves_for_piece(board, row, col, is_white_turn, piece=None, flip=False, en_passant_square=None, castling=None):
     if piece == None:
         piece = board[row][col]
-    moves = generate_moves(board, row, col, piece, flip, en_passant_square)
+    moves = generate_moves(board, row, col, piece, flip, en_passant_square, castling)
     legal_moves = []
     for move in moves:
         if move_checker.is_valid_move(board, [[row, col], move], piece, is_white_turn, flip, en_passant_square):
@@ -22,7 +22,7 @@ def generate_all_legal_moves_for_piece(board, row, col, is_white_turn, piece=Non
     return legal_moves
 
 
-def generate_moves(board, row, col, piece=None, flip=False, en_passant_square=None):
+def generate_moves(board, row, col, piece=None, flip=False, en_passant_square=None, castling=None):
     if piece == None:
         piece = board[row][col]
     color = piece[0]
@@ -39,7 +39,9 @@ def generate_moves(board, row, col, piece=None, flip=False, en_passant_square=No
     elif piece_type == 'q':
         return generate_queen_moves(board, row, col)
     elif piece_type == 'k':
-        return generate_king_moves(board, row, col)
+        if castling == None:
+            raise Exception("Castling can't be none for king moves")
+        return generate_king_moves(board, row, col, castling)
 
 
 def build_moves(board, row, col, directions):

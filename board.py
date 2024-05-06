@@ -164,7 +164,7 @@ class Board:
             col (int): The column of the piece.
         """
         # Calculate all possible moves for the piece
-        possible_moves = generate_moves(self.board, row, col, self.dragging_piece, self.flip_board, self.last_pawn_move_double)
+        possible_moves = generate_moves(self.board, row, col, self.dragging_piece, self.flip_board, self.last_pawn_move_double, castling)
         if self.dragging_piece[2] == 'k':
             color = self.dragging_piece[0]
             castling = can_castle(self.board, color, self.rook_b_a_moved, self.rook_b_h_moved)
