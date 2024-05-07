@@ -362,7 +362,7 @@ def check_pawn_king_attacks(board, enemy_color, start_rank, increment, direction
 ** ATTACKING **
 '''
 
-def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
+def find_all_attacking(board, attacked_row, attacked_col, is_white_turn, exit_early = False):
     attacking_pieces_positions = []
 
     row = None
@@ -382,10 +382,13 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
             if i != 0 and j != 0: # Diagonal, check for bishops and queens
                 if board[row][col] == enemy_color + '_b' or board[row][col] == enemy_color + '_q':
                     attacking_pieces_positions.append([row, col])
+                    
             else:
                 if board[row][col] == enemy_color + '_r' or board[row][col] == enemy_color + '_q':
                     attacking_pieces_positions.append([row, col])
 
+            if exit_early and len(attacking_pieces_positions) != 0:
+                return attacking_pieces_positions
 
     # Knight attacks
     knight_moves = [[-1, -2], [-1, 2], [1, -2], [1, 2], [-2, -1], [-2, 1], [2, -1], [2, 1]]
@@ -393,6 +396,8 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
         if attacked_row + move[0] >=0 and attacked_row + move[0] <=7 and attacked_col + move[1] >=0 and attacked_col + move[1] <=7:
             if board[attacked_row + move[0]][attacked_col + move[1]] == enemy_color + '_n':
                 attacking_pieces_positions.append([attacked_row + move[0], attacked_col + move[1]])
+                if exit_early:
+                    return attacking_pieces_positions
             
     # Pawn attacks
     pawns = []
@@ -415,9 +420,23 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn):
     return attacking_pieces_positions
 
 def first_piece_found(board, start, direction):
+    """
+    Find the first piece in a given direction from a specific starting position on a chess board.
+
+    Parameters:
+    board (list): A 2D list representing the game board. Each element is either an empty string or a string representing a game piece.
+    start (tuple): A tuple containing the row and column indices of the starting position on the board.
+    direction (tuple): A tuple containing the row and column offsets for the direction to search.
+
+    Returns:
+    tuple: A tuple containing the row and column indices of the first piece found in the given direction. If no piece is found within 8 steps or if the search goes out of the board boundaries, returns (None, None).
+    """
+    
+    new_row = start[0]
+    new_col = start[1]
     for i in range(8):
-        new_row = start[0] + direction[0] * (i + 1)
-        new_col = start[1] + direction[1] * (i + 1)
+        new_row += direction[0] * (i + 1)
+        new_col += direction[1] * (i + 1)
         if new_row <= 7 and new_row >= 0 and new_col <= 7 and new_col >= 0:
             if board[new_row][new_col] != '':
                 return new_row, new_col
@@ -442,7 +461,7 @@ def does_move_cause_check(board, start, end, is_white_turn):
 def is_in_check(board, is_white_turn):
     king = 'w_k' if is_white_turn else 'b_k'
     row, col = find_king(board, king)
-    checking_pieces = find_all_attacking(board, row, col, is_white_turn)
+    checking_pieces = find_all_attacking(board, row, col, is_white_turn, True)
     return len(checking_pieces) >= 1
 
 def is_mate(board, is_white_turn):

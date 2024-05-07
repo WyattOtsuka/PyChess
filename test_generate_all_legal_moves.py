@@ -1,4 +1,5 @@
 import move_generator
+import move_checker
 import fen_converter
 import time
 
@@ -60,8 +61,11 @@ def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes
 
             prev_rook_a_status = None
             prev_rook_h_status = None
+            
+            castling = [None, None]
 
             if color == 'w':
+                castling = move_checker.can_castle(board, color, w_rook_a_moved, w_rook_h_moved)
                 prev_rook_a_status = w_rook_a_moved
                 prev_rook_h_status = w_rook_h_moved
                 if move[0] == 7: # Check if it's on the back rank
@@ -79,6 +83,7 @@ def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes
                         prev_rook_h_status = w_rook_h_moved
                         w_rook_h_moved = True
             else:
+                castling = move_checker.can_castle(board, color, b_rook_a_moved, b_rook_h_moved)
                 prev_rook_a_status = b_rook_a_moved
                 prev_rook_h_status = b_rook_h_moved
                 if move[0] == 0: # Check if it's on the back rank
@@ -97,11 +102,15 @@ def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes
                         b_rook_h_moved = True
 
             destination_piece = board[move[0]][move[1]]
-            board[move[0]][move[1]] = board[int(square[0])][int(square[2])]
+            if len(move) == 3:
+                board[move[0]][move[1]] = board[int(square[0])][int(square[2])][:2] + move[2]
+            else:
+                board[move[0]][move[1]] = board[int(square[0])][int(square[2])]
             board[int(square[0])][int(square[2])] = ''
 
+            
 
-            squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board, 'w' if color == 'b' else 'b', en_passant_square=en_passant_square, exit_early=True)
+            squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board, 'w' if color == 'b' else 'b', en_passant_square=en_passant_square, castling=castling, exit_early=True)
             new_move_count = calculate_moves(board, squares_to_moves_2, depth_to_go - 1, 'w' if color == 'b' else 'b')
             if print_nodes:
                 if print_fen:
@@ -118,7 +127,10 @@ def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes
                 b_rook_a_moved = prev_rook_a_status
                 b_rook_h_moved = prev_rook_h_status
 
-            board[int(square[0])][int(square[2])] = board[move[0]][move[1]]
+            if len(move) == 3:
+                board[int(square[0])][int(square[2])] = board[move[0]][move[1]][:2] + "p"
+            else:
+                board[int(square[0])][int(square[2])] = board[move[0]][move[1]]
             board[move[0]][move[1]] = destination_piece
 
     return num_moves
@@ -131,8 +143,12 @@ def run_test():
     board_2, is_white_turn = fen_converter.fen_to_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w")
 
     color = 'w' if is_white_turn else 'b'
-    squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board_2, color, exit_early=True)
+    squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board_2, color, castling= [True, True], exit_early=True)
 
-    print(calculate_moves(board_2, squares_to_moves_2, 5, color=color, print_nodes=False, print_fen=False))
+    print(calculate_moves(board_2, squares_to_moves_2, 4, color=color, print_nodes=False, print_fen=False))
 
     print(f"Finished in {time.time()-start_time} s")
+
+
+if __name__ == "__main__":
+    run_test()
