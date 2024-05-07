@@ -20,7 +20,7 @@ def is_valid_move(board, move, piece, is_white_turn, flip, en_passant_square):
         return False
     
     # Check if the piece is pinned
-    if does_move_cause_check(board, start, end, is_white_turn):
+    if does_move_cause_check(board, start, end, is_white_turn, en_passant_square):
         return False
 
     # Check if the move is a valid move for the piece
@@ -408,7 +408,7 @@ def find_all_attacking(board, attacked_row, attacked_col, is_white_turn, exit_ea
             if attacked_col - 1 >= 0:
                 pawns.append([attacked_row - 1, attacked_col - 1])
     else:
-        if attacked_row + 1 >= 0:
+        if attacked_row + 1 <= 7:
             if attacked_col + 1 <=7:
                 pawns.append([attacked_row + 1, attacked_col + 1])
             if attacked_col - 1 >= 0:
@@ -435,8 +435,8 @@ def first_piece_found(board, start, direction):
     new_row = start[0]
     new_col = start[1]
     for i in range(8):
-        new_row += direction[0] * (i + 1)
-        new_col += direction[1] * (i + 1)
+        new_row += direction[0]
+        new_col += direction[1]
         if new_row <= 7 and new_row >= 0 and new_col <= 7 and new_col >= 0:
             if board[new_row][new_col] != '':
                 return new_row, new_col
@@ -446,17 +446,32 @@ def first_piece_found(board, start, direction):
 
 
 
-def does_move_cause_check(board, start, end, is_white_turn):
-    prev_piece = board[end[0]][end[1]]
+def does_move_cause_check(board, start, end, is_white_turn, en_passant_square = None):
+    if end == en_passant_square and board[start[0]][start[1]][2] == 'p':
+        prev_piece = board[start[0]][end[1]]
 
-    board[end[0]][end[1]] = board[start[0]][start[1]]
-    board[start[0]][start[1]] = ''
-    
-    ret = is_in_check(board, is_white_turn)
+        board[start[0]][end[1]] = ''
+        board[end[0]][end[1]] = board[start[0]][start[1]]
+        board[start[0]][start[1]] = ''
 
-    board[start[0]][start[1]] = board[end[0]][end[1]]
-    board[end[0]][end[1]] = prev_piece
-    return ret
+        ret = is_in_check(board, is_white_turn)
+
+        board[start[0]][start[1]] = board[end[0]][end[1]]
+        board[end[0]][end[1]] = ''
+        board[start[0]][end[1]] = prev_piece
+        
+        return ret
+    else:
+        prev_piece = board[end[0]][end[1]]
+
+        board[end[0]][end[1]] = board[start[0]][start[1]]
+        board[start[0]][start[1]] = ''
+        
+        ret = is_in_check(board, is_white_turn)
+
+        board[start[0]][start[1]] = board[end[0]][end[1]]
+        board[end[0]][end[1]] = prev_piece
+        return ret
 
 def is_in_check(board, is_white_turn):
     king = 'w_k' if is_white_turn else 'b_k'
@@ -464,7 +479,7 @@ def is_in_check(board, is_white_turn):
     checking_pieces = find_all_attacking(board, row, col, is_white_turn, True)
     return len(checking_pieces) >= 1
 
-def is_mate(board, is_white_turn):
+def is_mate(board, is_white_turn, en_passant_square):
     king = 'w_k' if is_white_turn else 'b_k'
 
     row, col = find_king(board, king)
@@ -483,7 +498,7 @@ def is_mate(board, is_white_turn):
         # Check if the piece can be captured
         can_capture_checker = find_all_attacking(board, attacking_pieces[0][0], attacking_pieces[0][1], not is_white_turn)
         for position in can_capture_checker:
-            if does_move_cause_check(board, position, attacking_pieces[0], not is_white_turn):
+            if does_move_cause_check(board, position, attacking_pieces[0], not is_white_turn, en_passant_square):
                 return False
             
         # Check if the piece can be blocked
