@@ -5,6 +5,10 @@ import time
 
 start_time = time.time()
 
+KING_FILE = 4
+A_FILE = 0
+H_FILE = 7
+
 b_rook_a_moved = False
 b_rook_h_moved = False
 w_rook_a_moved = False
@@ -45,78 +49,20 @@ def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes
             
             if print_nodes:
                 for move in squares_to_moves[square]:
-                    if print_fen:
-                        print(f"{chr(97+int(square[2]))}{8-int(square[0])}{chr(97+int(move[1]))}{8-move[0]}: 1  --- {fen_converter.board_to_fen(board)} {'w' if color == 'b' else 'b'}")
-                    else: 
-                        print(f"{chr(97+int(square[2]))}{8-int(square[0])}{chr(97+int(move[1]))}{8-move[0]}: 1")
-        return num_moves
+                    print_node(square, move, 1, board, color, print_fen)
 
+        return num_moves
 
     for square in squares_to_moves:
         # Make the move
         for move in squares_to_moves[square]:
-            en_passant_square = None
-            if board[int(square[0])][int(square[2])] != '' and board[int(square[0])][int(square[2])][2] == 'p' and abs(int(square[0]) - move[0]) == 2:
-                en_passant_square = [(int(square[0]) + move[0]) // 2, move[1]]
+            rook_moved_status = {'w_rook_a_moved': w_rook_a_moved, 'w_rook_h_moved': w_rook_h_moved, 'b_rook_a_moved': b_rook_a_moved, 'b_rook_h_moved': b_rook_h_moved}
+            en_passant_square, was_en_passant, prev_rook_a_status, prev_rook_h_status, next_turn_castling, destination_piece= make_move(board, square, move, color, rook_moved_status)
 
-            prev_rook_a_status = None
-            prev_rook_h_status = None
-            
-            castling = [None, None]
-
-            if color == 'w':
-                castling = move_checker.can_castle(board, color, w_rook_a_moved, w_rook_h_moved)
-                prev_rook_a_status = w_rook_a_moved
-                prev_rook_h_status = w_rook_h_moved
-                if move[0] == 7: # Check if it's on the back rank
-                    if move[1] == 0: # A file
-                        prev_rook_a_status = w_rook_a_moved
-                        w_rook_a_moved = True
-
-                    elif move[1] == 4: # King
-                        prev_rook_a_status = w_rook_a_moved
-                        w_rook_a_moved = True
-                        prev_rook_h_status = w_rook_h_moved
-                        w_rook_h_moved = True
-
-                    elif move[1] == 7: # H file
-                        prev_rook_h_status = w_rook_h_moved
-                        w_rook_h_moved = True
-            else:
-                castling = move_checker.can_castle(board, color, b_rook_a_moved, b_rook_h_moved)
-                prev_rook_a_status = b_rook_a_moved
-                prev_rook_h_status = b_rook_h_moved
-                if move[0] == 0: # Check if it's on the back rank
-                    if move[1] == 0: # A file
-                        prev_rook_a_status = b_rook_a_moved
-                        b_rook_a_moved = True
-
-                    elif move[1] == 4: # King
-                        prev_rook_a_status = b_rook_a_moved
-                        b_rook_a_moved = True
-                        prev_rook_h_status = b_rook_h_moved
-                        b_rook_h_moved = True
-
-                    elif move[1] == 7: # H file
-                        prev_rook_h_status = b_rook_h_moved
-                        b_rook_h_moved = True
-
-            destination_piece = board[move[0]][move[1]]
-            if len(move) == 3:
-                board[move[0]][move[1]] = board[int(square[0])][int(square[2])][:2] + move[2]
-            else:
-                board[move[0]][move[1]] = board[int(square[0])][int(square[2])]
-            board[int(square[0])][int(square[2])] = ''
-
-            
-
-            squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board, 'w' if color == 'b' else 'b', en_passant_square=en_passant_square, castling=castling, exit_early=True)
-            new_move_count = calculate_moves(board, squares_to_moves_2, depth_to_go - 1, 'w' if color == 'b' else 'b')
+            squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board, opposite_color(color), en_passant_square=en_passant_square, castling=next_turn_castling, exit_early=True)
+            new_move_count = calculate_moves(board, squares_to_moves_2, depth_to_go - 1, opposite_color(color))
             if print_nodes:
-                if print_fen:
-                   print(f"{chr(97+int(square[2]))}{8-int(square[0])}{chr(97+int(move[1]))}{8-move[0]}: {new_move_count}  --- {fen_converter.board_to_fen(board)} {'w' if color == 'b' else 'b'}")
-                else:
-                   print(f"{chr(97+int(square[2]))}{8-int(square[0])}{chr(97+int(move[1]))}{8-move[0]}: {new_move_count}")
+                print_node(square, move, new_move_count, board, color, print_fen)
                    
             num_moves += new_move_count
 
@@ -127,25 +73,129 @@ def calculate_moves(board, squares_to_moves, depth_to_go, color='b', print_nodes
                 b_rook_a_moved = prev_rook_a_status
                 b_rook_h_moved = prev_rook_h_status
 
-            if len(move) == 3:
-                board[int(square[0])][int(square[2])] = board[move[0]][move[1]][:2] + "p"
-            else:
+            if was_en_passant:
+                board[int(square[0])][move[1]] = destination_piece
                 board[int(square[0])][int(square[2])] = board[move[0]][move[1]]
-            board[move[0]][move[1]] = destination_piece
+                board[move[0]][move[1]] = ''
+            else:
+                if len(move) == 3:
+                    board[int(square[0])][int(square[2])] = board[move[0]][move[1]][:2] + "p"
+                else:
+                    board[int(square[0])][int(square[2])] = board[move[0]][move[1]]
+                board[move[0]][move[1]] = destination_piece
 
     return num_moves
 
-# print(calculate_moves(squares_to_moves, 3, color='w', print_nodes=True))
+def make_move(board, square, move, color, rook_moved_status):
+    en_passant_square = get_en_passant_square(board, square, move)
+    was_en_passant, destination_piece = move_piece(board, square, move)
+
+    prev_rook_a_status, prev_rook_h_status = update_rook_status(rook_moved_status, color, move)
+    next_turn_castling = get_next_turn_castling(board, opposite_color(color), rook_moved_status)
+
+    return en_passant_square, was_en_passant, prev_rook_a_status, prev_rook_h_status, next_turn_castling, destination_piece
+
+def get_en_passant_square(board, start_square, end_square):
+    if board[int(start_square[0])][int(start_square[2])] != '' and board[int(start_square[0])][int(start_square[2])][2] == 'p' and abs(int(start_square[0]) - end_square[0]) == 2:
+        return [(int(start_square[0]) + end_square[0]) // 2, end_square[1]]
+    else:
+        return None
+
+def move_piece(board, start_square, end_square):
+    was_en_passant = False
+    destination_piece = board[end_square[0]][end_square[1]]
+
+    if board[int(start_square[0])][int(start_square[2])][2] == 'p' and abs(int(start_square[2]) - end_square[1]) == 1 and board[end_square[0]][end_square[1]] == '':
+        was_en_passant = True
+        board[end_square[0]][end_square[1]] = board[int(start_square[0])][int(start_square[2])]
+        board[int(start_square[0])][end_square[1]] = ''
+        board[int(start_square[0])][int(start_square[2])] = ''
+    else:
+        if len(end_square) == 3:
+            board[end_square[0]][end_square[1]] = board[int(start_square[0])][int(start_square[2])][:2] + end_square[2]
+        else:
+            board[end_square[0]][end_square[1]] = board[int(start_square[0])][int(start_square[2])]
+        board[int(start_square[0])][int(start_square[2])] = ''
+
+    return was_en_passant, destination_piece
+
+def update_rook_status(rook_moved_status, color, end_square):
+    prev_rook_a_status = None
+    prev_rook_h_status = None
+
+    if color == 'w':
+        prev_rook_a_status = rook_moved_status['w_rook_a_moved']
+        prev_rook_h_status = rook_moved_status['w_rook_h_moved']
+
+        if end_square[0] == 7: # Check if it's on the back rank
+            if end_square[1] == A_FILE:
+                prev_rook_a_status = rook_moved_status['w_rook_a_moved']
+                rook_moved_status['w_rook_a_moved'] = True
+
+            elif end_square[1] == KING_FILE:
+                prev_rook_a_status = rook_moved_status['w_rook_a_moved']
+                rook_moved_status['w_rook_a_moved'] = True
+                prev_rook_h_status = rook_moved_status['w_rook_h_moved']
+                rook_moved_status['w_rook_h_moved'] = True
+
+            elif end_square[1] == H_FILE:
+                prev_rook_h_status = rook_moved_status['w_rook_h_moved']
+                rook_moved_status['w_rook_h_moved'] = True
+    else:
+        prev_rook_a_status = rook_moved_status['b_rook_a_moved']
+        prev_rook_h_status = rook_moved_status['b_rook_h_moved']
+
+        if end_square[0] == 0: # Check if it's on the back rank
+            if end_square[1] == A_FILE:
+                prev_rook_a_status = rook_moved_status['b_rook_a_moved']
+                rook_moved_status['b_rook_a_moved'] = True
+
+            elif end_square[1] == KING_FILE: 
+                prev_rook_a_status = rook_moved_status['b_rook_a_moved']
+                rook_moved_status['b_rook_a_moved'] = True
+                prev_rook_h_status = rook_moved_status['b_rook_h_moved']
+                rook_moved_status['b_rook_h_moved'] = True
+
+            elif end_square[1] == H_FILE:
+                prev_rook_h_status = rook_moved_status['b_rook_h_moved']
+                rook_moved_status['b_rook_h_moved'] = True
+
+    return prev_rook_a_status, prev_rook_h_status
+
+def get_next_turn_castling(board, color, rook_moved_status):
+    if color == 'w':
+        return move_checker.can_castle(board, color, rook_moved_status['w_rook_a_moved'], rook_moved_status['w_rook_h_moved'])
+    else:
+        return move_checker.can_castle(board, color, rook_moved_status['b_rook_a_moved'], rook_moved_status['b_rook_h_moved'])
+
+def print_node(square, move, new_move_count, board, color, print_fen):
+    move_to_print = f"{chr(97+int(square[2]))}{8-int(square[0])}{chr(97+int(move[1]))}{8-move[0]}"
+    if len(move) == 3:
+        move_to_print += move[2]
+
+    if print_fen:
+        print(f"{move_to_print}: {new_move_count}  --- {fen_converter.board_to_fen(board)} {opposite_color(color)}")
+    else:
+        print(f"{move_to_print}: {new_move_count}")
+
+def opposite_color(color):
+    if color == 'w':
+        return 'b'
+    else:
+        return 'w'
 
 def run_test():
     start_time = time.time()
 
-    board_2, is_white_turn = fen_converter.fen_to_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w")
+    board_2, is_white_turn = fen_converter.fen_to_board("rnbq1k1r/pp1Pbppp/2p5/8/2B5/P7/1PP1NnPP/RNBQK2R b")
 
     color = 'w' if is_white_turn else 'b'
-    squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board_2, color, castling= [True, True], exit_early=True)
 
-    print(calculate_moves(board_2, squares_to_moves_2, 4, color=color, print_nodes=False, print_fen=False))
+    castling = move_checker.can_castle(board_2, color, False, False)
+
+    squares_to_moves_2 = move_generator.generate_all_legal_moves_for_color(board_2, color, castling=castling, exit_early=True)
+
+    print(calculate_moves(board_2, squares_to_moves_2, 3, color=color, print_nodes=True, print_fen=False))
 
     print(f"Finished in {time.time()-start_time} s")
 
