@@ -1,6 +1,6 @@
 import copy
 
-def is_valid_move(board, move, piece, is_white_turn, flip, en_passant_square):
+def is_valid_move(board, move, piece, is_white_turn, flip, en_passant_square, castling):
     start = move[0]
     end = move[1]
 
@@ -35,7 +35,7 @@ def is_valid_move(board, move, piece, is_white_turn, flip, en_passant_square):
     elif piece[2] == 'q':
         return is_valid_queen_move(board, start, end)
     elif piece[2] == 'k':
-        return is_valid_king_move(board, start, end)
+        return is_valid_king_move(board, start, end, castling)
 
     return False
 
@@ -132,11 +132,14 @@ def is_valid_queen_move(board, start, end):
 
     return False
 
-def is_valid_king_move(board, start, end):
+def is_valid_king_move(board, start, end, castling):
     # Check if the king is moving one square in any direction
     if abs(start[0] - end[0]) <= 1 and abs(start[1] - end[1]) <= 1:
         return True
-
+    elif castling[0] and start[0] == end[0] and start[1] - 2 == end[1]:
+        return True
+    elif castling[1] and start[0] == end[0] and start[1] + 2 == end[1]:
+        return True
     return False
 
 def is_move_on_board(start, end):
@@ -203,6 +206,15 @@ def can_castle(board, color, rook_a_moved, rook_h_moved):
 
     if not any(castling):
         return castling
+    
+    back_rank = 7 if color == 'w' else 0
+
+    if board[back_rank][0] == '' or board[back_rank][0][2] != 'r':
+        castling[0] = False
+    if board[back_rank][7] == '' or board[back_rank][7][2] != 'r':
+        castling[1] = False
+    if not any(castling):
+        return castling 
     
     if blocking_stopping_castling(board, color, 'long') or attack_stopping_castling(board, color, 'long'):
         castling[0] = False

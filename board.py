@@ -307,7 +307,7 @@ class Board:
                             valid_move = True
 
                 if valid_move == None:
-                    valid_move = is_valid_move(self.board, move, self.dragging_piece, self.is_white_turn, self.flip_board, self.last_pawn_move_double)
+                    valid_move = is_valid_move(self.board, move, self.dragging_piece, self.is_white_turn, self.flip_board, self.last_pawn_move_double, castling)
 
                 print(valid_move)
                 if valid_move:

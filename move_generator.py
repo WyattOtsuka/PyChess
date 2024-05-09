@@ -16,7 +16,7 @@ def generate_all_legal_moves_for_piece(board, row, col, is_white_turn, piece=Non
     moves = generate_moves(board, row, col, piece, flip, en_passant_square, castling, exit_early)
     legal_moves = []
     for move in moves:
-        if move_checker.is_valid_move(board, [[row, col], move], piece, is_white_turn, flip, en_passant_square):
+        if move_checker.is_valid_move(board, [[row, col], move], piece, is_white_turn, flip, en_passant_square, castling):
             legal_moves.append(move)
     
     return legal_moves
@@ -81,9 +81,17 @@ def generate_pawn_moves(board, row, col, color, flip, en_passant_sqaure):
                 if row == 6 and board[row-2][col] == '' and board[row-1][col] == '':
                     moves.append([row-2, col])
         if col > 0 and board[row-1][col-1] != '' and board[row-1][col-1][0] == 'b':
-            moves.append([row-1, col-1])
+            if row == 1:
+                for piece in ["q", "r", "n", "b"]:
+                    moves.append([row-1, col-1, piece])
+            else:
+                moves.append([row-1, col-1])
         if col < 7 and board[row-1][col+1] != '' and board[row-1][col+1][0] == 'b':
-            moves.append([row-1, col+1])
+            if row == 1:
+                for piece in ["q", "r", "n", "b"]:
+                    moves.append([row-1, col-1, piece])
+            else:
+                moves.append([row-1, col+1])
     else:
         if row < 7:
             if row == 6:
@@ -94,9 +102,17 @@ def generate_pawn_moves(board, row, col, color, flip, en_passant_sqaure):
                 if row == 1 and board[row+2][col] == '' and board[row+1][col] == '':
                     moves.append([row+2, col])
         if col > 0 and board[row+1][col-1] != '' and board[row+1][col-1][0] == 'w':
-            moves.append([row+1, col-1])
+            if row == 6:
+                for piece in ["q", "r", "n", "b"]:
+                    moves.append([row+1, col-1, piece])
+            else:
+                moves.append([row+1, col-1])
         if col < 7 and board[row+1][col+1] != '' and board[row+1][col+1][0] == 'w':
-            moves.append([row+1, col+1])
+            if row == 6:
+                for piece in ["q", "r", "n", "b"]:
+                    moves.append([row+1, col+1, piece])
+            else:
+                moves.append([row+1, col+1])
 
     if en_passant_sqaure != None and abs(en_passant_sqaure[0] - row) == 1 and abs(en_passant_sqaure[1] - col) == 1:
         moves.append(en_passant_sqaure)
@@ -123,8 +139,8 @@ def generate_king_moves(row, col, castling):
             moves.append([new_row, new_col])
 
     if castling[0]:
-        moves.append([row - 2, col])
+        moves.append([row, col - 2])
     if castling[1]:
-        moves.append([row + 2, col])
+        moves.append([row, col + 2])
 
     return moves
