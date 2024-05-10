@@ -89,7 +89,7 @@ def generate_pawn_moves(board, row, col, color, flip, en_passant_sqaure):
         if col < 7 and board[row-1][col+1] != '' and board[row-1][col+1][0] == 'b':
             if row == 1:
                 for piece in ["q", "r", "n", "b"]:
-                    moves.append([row-1, col-1, piece])
+                    moves.append([row-1, col+1, piece])
             else:
                 moves.append([row-1, col+1])
     else:
