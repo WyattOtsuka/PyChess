@@ -45,12 +45,34 @@ g8h6: 399
 '''
 
 my_output_array = my_output.splitlines()
+my_output_map = {}
+
+for my_string in my_output_array:
+    if my_string != '':
+        split_string = my_string.split("  --- ")[0]
+        move_count_array = split_string.split(": ")
+        my_output_map[move_count_array[0]] = move_count_array[1]
+
 stockfish_output_arary = stockfish_output.splitlines()
+stockfish_output_map = {}
+for stockfish_string in stockfish_output_arary:
+    if stockfish_string != '':
+        move_count_array = stockfish_string.split(": ")
+        stockfish_output_map[move_count_array[0]] = move_count_array[1]
 
-my_output_array.sort()
-stockfish_output_arary.sort()
+key_set = set()
 
-for my_move, stockfish_move in zip(my_output_array, stockfish_output_arary):
-    if my_move != stockfish_move:
-        print(f"{my_move} -> {stockfish_move}")
+key_set.update(my_output_map.keys())
+key_set.update(stockfish_output_map.keys())
 
+for key in key_set:
+    my_ouput = ""
+    stockfish_output = ""
+    if key in my_output_map:
+        my_ouput = my_output_map[key]
+
+    if key in stockfish_output_map:
+        stockfish_output = stockfish_output_map[key]
+
+    if my_ouput != stockfish_output:
+        print(f"{key}: {my_ouput} -> {stockfish_output}")
